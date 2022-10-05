@@ -17,8 +17,7 @@ Backend for task-tracking application
 3. Set environment variables in .env file
    - create .env file in todolist folder
    - you can copy the default variables from todolist/.env.example
-4. Launch database from deploy folder
-   - `cd deploy`
+4. Launch database
    - `docker compose --env-file ../todolist/.env -f docker-compose.yaml up -d`
 5. Make migrations from todolist folder
    - `cd todolist`
