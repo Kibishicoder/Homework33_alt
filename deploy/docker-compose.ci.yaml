@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+
+  frontend:
+    image: sermalenk/skypro-front:lesson-34
+    ports:
+      - "80:80"
+    depends_on:
+      - db
+      - api
+    networks:
+      - front_network
+
+  api:
+    image: Kibishicoder/Homework33:${GITHUB_REF_NAME}-${GITHUB_RUN_ID}
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./.env:/code/.env
+    networks:
+      - front_network
+      - db_network
+
+
+  migrations:
+    image: Kibishicoder/Homework33:${GITHUB_REF_NAME}-${GITHUB_RUN_ID}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./.env:/code/.env
+    networks:
+      - db_network
+    command: >
+      sh -c "python manage.py migrate"
+
+
+  db:
+    image: postgres:12.4-alpine
+    volumes:
+      - postgres_volume:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    restart: always
+    ports:
+      - "${DB_PORT}:${DB_PORT}"
+    networks:
+      - db_network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_is_ready -U ${DB_USER} -d ${DB_NAME}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+
+volumes:
+  postgres_volume:
+
+
+networks:
+  db_network:
+  front_network:
