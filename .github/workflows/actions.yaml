@@ -1,58 +1,132 @@
-name: Build and deploy workflow
+name: Test, build and deploy
+
 on:
   push:
+    tags:
+      - 'v*'
+  pull_request:
     branches:
-      - main
-#      - deploy
+      - 'main'
+
 jobs:
-  build_and_push:
-    runs-on: ubuntu-latest
-    steps:
-      - name: clone code
-        uses: actions/checkout@v2
-      - name: docker build
-        run: |
-          cd todolist
-          docker build . -t Kibishicoder/Homework33:$GITHUB_REF_NAME-$GITHUB_RUN_ID -f Dockerfile
-      - name: docker login
-        run: echo ${{ secrets.DOCKER_TOKEN }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-      - name: docker push
-        run: docker push Kibishicoder/Homework33:$GITHUB_REF_NAME-$GITHUB_RUN_ID
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build_and_push
+
+  tests:
+    runs-on: ubuntu-22.04
     env:
-      SECRET_KEY: "${{ secrets.SECRET_KEY }}"
-      DEBUG_MODE: ${{ secrets.DEBUG_MODE }}
-      ALLOWED_HOSTS: ${{ secrets.ALLOWED_HOSTS }}
-      DB_ENGINE: ${{ secrets.DB_ENGINE }}
-      DB_HOST: ${{ secrets.DB_HOST }}
-      DB_PORT: ${{ secrets.DB_PORT }}
-      DB_NAME: ${{ secrets.DB_NAME }}
-      DB_USER: ${{ secrets.DB_USER }}
-      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DEBUG: False
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: postgres
+      SECRET_KEY: '${{ secrets.SECRET_KEY }}'
+      VK_OAUTH2_KEY: 1234567890
+      VK_OAUTH2_SECRET: 1234567890
+    services:
+      postgres:
+        image: postgres:13.0-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
     steps:
-      - name: clone code
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.10'
+          architecture: 'x64'
+      - name: Install dependencies
+        run: |
+          pip install poetry==1.1.13
+          poetry install --no-root
+      - name: Run tests
+        env:
+          SECRET_KEY: '${{ secrets.SECRET_KEY }}'
+          POSTGRES_HOST: '127.0.0.1'
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        run: |
+          poetry run sh -c "python3 manage.py test"
+
+  build:
+    if: startsWith(github.event.ref, 'refs/tags/v')
+    runs-on: ubuntu-22.04
+    needs: tests
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ secrets.DOCKER_HUB_USERNAME }}/todolist
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  deploy:
+    runs-on: ubuntu-22.04
+    needs: build
+    environment:
+      name: Production
+    steps:
+      - name: Checkout
         uses: actions/checkout@v2
-      - name: render docker-compose and .env
-        run: | 
-          cat deploy/docker-compose.ci.yaml | envsubst > deploy/docker-compose.yaml
-          cat deploy/.ci_env | envsubst > deploy/.env
-      - name: copy files to server
+      - uses: anthonykgross/ansible-vault-cli-github-action@v1
+        with:
+          vault_key: ${{ secrets.VAULT_PASSWORD }}
+          command: "ansible-vault decrypt deploy/.env"
+      - name: Update Docker Compose
+        env:
+          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+        run: |
+          envsubst '$DOCKER_HUB_USERNAME' < deploy/docker-compose.yaml > deploy/tmp.docker-compose.yaml
+          mv deploy/tmp.docker-compose.yaml deploy/docker-compose.yaml
+      - name: Collect Static
+        run: |
+          sudo docker run \
+            --user 0 \
+            --rm \
+            --env-file $(pwd)/deploy/.env \
+            --entrypoint  '' \
+            -v $(pwd)/deploy/static/:/opt/static/:rw \
+            ${{ secrets.DOCKER_HUB_USERNAME }}/todolist:latest \
+            python manage.py collectstatic -c --no-input
+      - name: Copy on server
         uses: appleboy/scp-action@master
         with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USERNAME }}
-          password: ${{ secrets.SERVER_PASSWORD }}
-          source: "deploy/docker-compose.db.yaml,deploy/.env"
-          target: "todolist"
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          source: "deploy/*"
+          target: todolist
           strip_components: 1
-      - name: deploy app
+      - name: Run compose
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USERNAME }}
-          password: ${{ secrets.SERVER_PASSWORD }}
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
           script: |
             cd todolist
-            echo ${{ secrets.SERVER_PASSWORD }} | sudo -S docker-compose up -d
+            docker compose pull
+            docker compose up -d
+      - name: Clear after deploy
+        if: always()
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: |
+            docker system prune -a -f
