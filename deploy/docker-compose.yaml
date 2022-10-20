@@ -20,7 +20,7 @@ services:
 
 
   api:
-    image: kibishidocker/homework33:latest
+    image: ${DOCKER_USERNAME}/homework33:latest
     restart: always
     env_file:
       - ./.env
