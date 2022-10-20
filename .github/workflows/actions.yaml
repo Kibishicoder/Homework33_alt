@@ -47,16 +47,16 @@ jobs:
         run: |
           envsubst '$DOCKER_USERNAME' < deploy/docker-compose.yaml > deploy/tmp.docker-compose.yaml
           mv deploy/tmp.docker-compose.yaml deploy/docker-compose.yaml
-      - name: Collect Static
-        run: |
-          sudo docker run \
-            --user 0 \
-            --rm \
-            --env-file $(pwd)/deploy/.env \
-            --entrypoint  '' \
-            -v $(pwd)/deploy/static/:/opt/static/:rw \
-            ${{ secrets.DOCKER_USERNAME }}/todolist:latest \
-            python manage.py collectstatic -c --no-input
+#      - name: Collect Static
+#        run: |
+#          sudo docker run \
+#            --user 0 \
+#            --rm \
+#            --env-file $(pwd)/deploy/.env \
+#            --entrypoint  '' \
+#            -v $(pwd)/deploy/static/:/opt/static/:rw \
+#            ${{ secrets.DOCKER_USERNAME }}/todolist:latest \
+#            python manage.py collectstatic -c --no-input
       - name: Copy on server
         uses: appleboy/scp-action@master
         with:
@@ -76,12 +76,12 @@ jobs:
             cd todolist
             docker compose pull
             docker compose up -d
-      - name: Clear after deploy
-        if: always()
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          script: |
-            docker system prune -a -f
+#      - name: Clear after deploy
+#        if: always()
+#        uses: appleboy/ssh-action@master
+#        with:
+#          host: ${{ secrets.SSH_HOST }}
+#          username: ${{ secrets.SSH_USER }}
+#          password: ${{ secrets.SSH_PASSWORD }}
+#          script: |
+#            docker system prune -a -f
