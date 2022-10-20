@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "todolist"
+version = "0.1.0"
+description = ""
+authors = ["Kibishicoder <kibishiart@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+Django = "^4.1.1"
+envparse = "^0.2.0"
+psycopg2-binary = "^2.9.3"
+djangorestframework = "^3.14.0"
+social-auth-app-django = "^5.0.0"
+django-filter = "^22.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
