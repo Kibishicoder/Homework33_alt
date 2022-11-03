@@ -4,9 +4,10 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, permissions
 from rest_framework.filters import OrderingFilter, SearchFilter
 
-from todolist.goals.filters import GoalDateFilter
-from todolist.goals.models import GoalCategory, Goal, GoalComment
-from todolist.goals.serializers import GoalCategoryCreateSerializer, GoalCategorySerializer, GoalCreateSerializer, \
+from goals.filters import GoalDateFilter
+from goals.models import GoalCategory, Goal, GoalComment
+
+from goals.serializers import GoalCategoryCreateSerializer, GoalCategorySerializer, GoalCreateSerializer, \
     GoalSerializer, GoalCommentCreateSerializer, GoalCommentSerializer
 
 

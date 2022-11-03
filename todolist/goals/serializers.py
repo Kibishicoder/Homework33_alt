@@ -2,8 +2,8 @@ from typing import Type
 
 from rest_framework import exceptions, serializers
 
-from todolist.core.serializers import ProfileSerializer
-from todolist.goals.models import Goal, GoalCategory, GoalComment
+from core.serializers import ProfileSerializer
+from goals.models import Goal, GoalCategory, GoalComment
 
 
 class GoalCategoryCreateSerializer(serializers.ModelSerializer):

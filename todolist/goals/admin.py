@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from todolist.goals.models import Goal, GoalCategory, GoalComment
+from goals.models import GoalCategory, Goal, GoalComment
 
 
 @admin.register(GoalCategory)
