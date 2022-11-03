@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'social_django',
-    'todolist.core',
+    'core',
     'goals',
 ]
 
