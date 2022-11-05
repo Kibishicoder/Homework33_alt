@@ -103,7 +103,6 @@ class GoalListView(generics.ListAPIView):
     serializer_class = GoalSerializer
     filterset_class = GoalDateFilter
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
-    filterset_fields = ['category', 'priority', 'status']
     ordering_fields = ['title', 'created']
     ordering = ['title']
     search_fields = ['title', 'description']
@@ -147,7 +146,7 @@ class GoalCommentListView(generics.ListAPIView):
 
     def get_queryset(self):
         return GoalComment.objects.select_related('goal__category__board', 'user').filter(
-            goal__category__board_participants__user_id=self.request.user.id
+            goal__category__board__participants__user_id=self.request.user.id
         )
 
 
@@ -158,5 +157,5 @@ class GoalCommentView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         return GoalComment.objects.select_related('goal__category__board', 'user').filter(
-            goal__category__board_participants__user_id=self.request.user.id
+            goal__category__board__participants__user_id=self.request.user.id
         )
