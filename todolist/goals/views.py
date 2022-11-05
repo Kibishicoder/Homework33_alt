@@ -1,7 +1,7 @@
 from django.db import transaction
 from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, filters
 from rest_framework.decorators import permission_classes
 from rest_framework.filters import OrderingFilter, SearchFilter
 
@@ -60,7 +60,7 @@ class GoalCategoryListView(generics.ListAPIView):
     model = GoalCategory
     permission_classes = [GoalCategoryPermission]
     serializer_class = GoalCategorySerializer
-    filter_backends = [OrderingFilter, SearchFilter, DjangoFilterBackend]
+    filter_backends = [filters.OrderingFilter, filters.SearchFilter, DjangoFilterBackend]
     filterset_fields = ['board']
     ordering_fields = ['title', 'created']
     ordering = ['title']
@@ -102,7 +102,7 @@ class GoalListView(generics.ListAPIView):
     permission_classes = [GoalPermission]
     serializer_class = GoalSerializer
     filterset_class = GoalDateFilter
-    filter_backends = [DjangoFilterBackend, OrderingFilter, SearchFilter]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
     filterset_fields = ['category', 'priority', 'status']
     ordering_fields = ['title', 'created']
     ordering = ['title']
@@ -110,7 +110,8 @@ class GoalListView(generics.ListAPIView):
 
     def get_queryset(self):
         return Goal.objects.select_related('user', 'category__board').filter(
-            Q(category__board__participants__user_id=self.request.user.id) & ~Q(status=Goal.Status.archived) & Q(category__is_deleted=False)
+            Q(category__board__participants__user_id=self.request.user.id)
+            & ~Q(status=Goal.Status.archived)
         )
 
 
@@ -121,7 +122,8 @@ class GoalView(generics.RetrieveUpdateAPIView):
 
     def get_queryset(self):
         return Goal.objects.select_related('user', 'category__board').filter(
-            Q(category__board__participants__user_id=self.request.user.id) & ~Q(status=Goal.Status.archived) & Q(category__is_deleted=False)
+            Q(category__board__participants__user_id=self.request.user.id)
+            & ~Q(status=Goal.Status.archived)
         )
 
     def perform_destroy(self, instance: Goal):
@@ -139,7 +141,7 @@ class GoalCommentListView(generics.ListAPIView):
     model = GoalComment
     permission_classes = [CommentPermission]
     serializer_class = GoalCommentSerializer
-    filter_backends = [OrderingFilter]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ['goal']
     ordering = ['-created']
 
@@ -155,4 +157,6 @@ class GoalCommentView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = GoalCommentSerializer
 
     def get_queryset(self):
-        return GoalComment.objects.filter(user_id=self.request.user.id)
+        return GoalComment.objects.select_related('goal__category__board', 'user').filter(
+            goal__category__board_participants__user_id=self.request.user.id
+        )
