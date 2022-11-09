@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'core',
     'goals',
     'bot',
-
+    'drf_spectacular',
 ]
 
 MIDDLEWARE = [
@@ -155,8 +155,15 @@ SOCIAL_AUTH_NEW_USER_REDIRECT_URL = '/logged-in/'
 SOCIAL_AUTH_USER_MODEL = 'core.User'
 
 REST_FRAMEWORK = {
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'DEFAULT_FILTER_BACKEND': (
-        'django_filters.rest_framework.DjangoFilterBackend',
-    )
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Todolist API',
+    'DESCRIPTION': 'API for todolist application',
+    'VERSION': '1.0.0',
+}
+
+# Telegram Bot
+
+BOT_TOKEN = env('TG_TOKEN')

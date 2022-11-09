@@ -4,7 +4,14 @@ from core.models import User
 
 
 class TgUser(models.Model):
-    chat_id = models.BigIntegerField(verbose_name='Chat ID', unique=True)
-    username = models.CharField(verbose_name='Username', max_length=255, null=True, blank=True, default=None)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, default=None)
-    verefication_code = models.CharField(max_length=32, null=True, blank=True, default=None)
+    class Meta:
+        verbose_name = "Пользователь телеграм"
+        verbose_name_plural = "Пользователи телеграм"
+
+    tg_user_id = models.IntegerField(verbose_name="ID пользователя в телеграм")
+    tg_chat_id = models.IntegerField(verbose_name="ID чата в телеграм")
+    verification_code = models.IntegerField(verbose_name="Код для верификации")
+    user = models.ForeignKey(
+        User, verbose_name="Пользователь приложения", on_delete=models.PROTECT, null=True
+    )
+
