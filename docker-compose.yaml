@@ -18,7 +18,8 @@ services:
       interval: 3s
       timeout: 3s
       retries: 5
-
+    networks:
+      - backend_nw
 
 
   api:
@@ -74,6 +75,8 @@ services:
     volumes:
       - ./deploy/nginx.conf:/etc/nginx/conf.d/default.conf
       - ./static/:/opt/static/
+    networks:
+      - frontend_nw
 
 volumes:
   pg_data_todolist:

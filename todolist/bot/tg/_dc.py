@@ -1,8 +1,10 @@
 from dataclasses import field
 from typing import List, Optional
 
-from marshmallow_dataclass import dataclass
+# from marshmallow_dataclass import dataclass
+# from marshmallow import EXCLUDE
 from marshmallow import EXCLUDE
+from marshmallow_dataclass import dataclass
 
 
 @dataclass

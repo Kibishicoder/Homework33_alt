@@ -38,10 +38,10 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'social_django',
+    'pydantic',
     'core',
     'goals',
     'bot',
-    'drf_spectacular',
 ]
 
 MIDDLEWARE = [
@@ -154,15 +154,6 @@ SOCIAL_AUTH_VK_EXTRA_DATA = [
 SOCIAL_AUTH_NEW_USER_REDIRECT_URL = '/logged-in/'
 SOCIAL_AUTH_USER_MODEL = 'core.User'
 
-REST_FRAMEWORK = {
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-}
-
-SPECTACULAR_SETTINGS = {
-    'TITLE': 'Todolist API',
-    'DESCRIPTION': 'API for todolist application',
-    'VERSION': '1.0.0',
-}
 
 # Telegram Bot
 

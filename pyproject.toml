@@ -16,6 +16,7 @@ django-filter = "^22.1"
 requests = "^2.28.1"
 django-rest-framework = "^0.1.0"
 drf-spectacular = "^0.24.2"
+marshmallow-dataclass = "^8.5.9"
 
 
 [tool.poetry.group.dev.dependencies]

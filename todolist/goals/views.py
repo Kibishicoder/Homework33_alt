@@ -2,8 +2,6 @@ from django.db import transaction
 from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, permissions, filters
-from rest_framework.decorators import permission_classes
-from rest_framework.filters import OrderingFilter, SearchFilter
 
 from goals.filters import GoalDateFilter
 from goals.models import GoalCategory, Goal, GoalComment, Board
