@@ -105,8 +105,6 @@ class Command(BaseCommand):
 
         self.storage.reset(tg_user.chat_id)
 
-
-
     def handle_verified_user(self, msg: Message, tg_user: TgUser):
         if msg.text == '/goals':
             self.handle_goals_list(msg, tg_user)
