@@ -2,11 +2,11 @@ from random import randint
 
 from django.core.management import BaseCommand
 
+from bot.tg._dc import GetUpdatesResponse
+from todolist.settings import BOT_TOKEN
+from goals.models import Goal, GoalCategory, BoardParticipant
 from bot.models import TgUser
 from bot.tg import TgClient
-from bot.tg._dc import GetUpdatesResponse
-from goals.models import Goal, GoalCategory, BoardParticipant
-from todolist.settings import BOT_TOKEN
 
 
 class Command(BaseCommand):
